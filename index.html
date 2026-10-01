@@ -1,477 +1,718 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Winter Arc Tracker</title>
+    <title>THE WINTER ARC - 90-Day Pro Habit & Analytics Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        serif: ['Cinzel', 'serif'],
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
     <style>
-        /* Print layout for perfect A4 replication */
+        :root {
+            --bg-main: #9cb1c9;
+            --bg-panel: #000000;
+            --bg-panel-sub: #0f172a;
+            --text-main: #0f172a;
+            --grid-bg: #cad8e6;
+            --grid-header: #000000;
+            --grid-border: #1e293b;
+            --accent-primary: #000000;
+            --accent-glow: rgba(0, 0, 0, 0.25);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #8aa1ba;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #000000;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #1e293b;
+        }
+
+        /* Glass / Sheet Cards */
+        .excel-panel {
+            background: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .dark-panel {
+            background: #000000;
+            color: #ffffff;
+            border: 2px solid #000000;
+            box-shadow: 4px 4px 0px #1e293b;
+        }
+
+        /* Habit Grid Custom Styles */
+        .cell-checked {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+
+        .checkbox-custom {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            accent-color: #000000;
+            border-radius: 2px;
+            transition: all 0.15s ease;
+        }
+
+        /* Modal Overlay Animations */
+        .modal-blur {
+            backdrop-filter: blur(6px);
+        }
+
         @media print {
-            @page {
-                size: A4 portrait;
-                margin: 8mm;
-            }
-            body {
-                background: #ffffff !important;
-                color: #000000 !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .no-print {
-                display: none !important;
-            }
-            .print-container {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                background: #ffffff !important;
-            }
-            input, textarea {
-                border-color: #000000 !important;
-                background: transparent !important;
-                color: #000000 !important;
-            }
-            .checked-cell {
-                background-color: #000000 !important;
-                color: #ffffff !important;
-            }
-        }
-
-        /* Lined background for textareas to look like real printed notebook lines */
-        .lined-textarea {
-            background-image: linear-gradient(transparent, transparent 23px, #e2e8f0 24px);
-            background-size: 100% 24px;
-            line-height: 24px !important;
-        }
-
-        @media print {
-            .lined-textarea {
-                background-image: linear-gradient(transparent, transparent 23px, #000000 24px) !important;
-            }
-        }
-
-        /* Custom scrollbar for mobile responsiveness */
-        .table-scroll::-webkit-scrollbar {
-            height: 6px;
-        }
-        .table-scroll::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .table-scroll::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 3px;
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 font-sans min-h-screen pb-12">
+<body class="p-2 sm:p-5 min-h-screen flex flex-col justify-between">
 
-    <!-- Control Header for Web view (No Print) -->
-    <header class="no-print bg-slate-900 text-white py-3 px-4 mb-6 shadow-md border-b border-slate-800">
-        <div class="max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3">
-            <div class="flex items-center gap-2">
-                <span class="text-xl">❄️</span>
-                <h1 class="font-bold text-base sm:text-lg font-serif tracking-wider">THE WINTER ARC TRACKER</h1>
+    <div>
+    <!-- HEADER NAVBAR -->
+    <header class="max-w-[1750px] mx-auto mb-5 dark-panel rounded-xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-4 relative overflow-hidden no-print">
+        <div class="flex items-center gap-3.5 z-10">
+            <div class="p-2.5 bg-white text-black rounded-lg font-black flex items-center justify-center">
+                <span class="text-2xl">❄️</span>
             </div>
-            
-            <div class="flex items-center gap-2">
-                <button onclick="window.print()" class="bg-black hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-lg text-xs sm:text-sm border border-slate-700 flex items-center gap-2 transition active:scale-95 shadow">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                    Print / Save PDF
-                </button>
-                <button onclick="resetData()" class="bg-rose-900/40 hover:bg-rose-800 text-rose-200 font-semibold px-3 py-2 rounded-lg text-xs sm:text-sm border border-rose-700/50 transition active:scale-95">
-                    Reset All
-                </button>
+            <div>
+                <div class="flex items-center gap-2.5">
+                    <h1 class="font-black text-xl sm:text-2xl tracking-wider uppercase italic text-white">THE WINTER ARC</h1>
+                    <span class="bg-zinc-800 text-white font-extrabold text-[10px] sm:text-xs px-3 py-1 rounded-full border border-zinc-700">90 DAYS CHALLENGE</span>
+                </div>
+                <p class="text-xs text-slate-300 font-medium mt-0.5">BETTER HABITS • CLEARER MIND • A STRONGER YOU</p>
             </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 sm:gap-3.5 z-10">
+            <!-- PHASE VIEW SELECTOR -->
+            <div class="flex items-center gap-2 bg-zinc-900 border border-zinc-700 px-3 py-1.5 rounded-lg shadow-inner">
+                <label class="text-xs font-bold text-slate-300">PHASE:</label>
+                <select id="viewModeSelect" onchange="changeViewMode()" class="bg-transparent text-white font-bold focus:outline-none cursor-pointer text-xs">
+                    <option value="90days" class="bg-black text-white">Full 90 Days Challenge</option>
+                    <option value="p1" class="bg-black text-white">Phase 1 (Days 1 - 30)</option>
+                    <option value="p2" class="bg-black text-white">Phase 2 (Days 31 - 60)</option>
+                    <option value="p3" class="bg-black text-white">Phase 3 (Days 61 - 90)</option>
+                </select>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <button onclick="openAddHabitModal()" class="bg-white hover:bg-slate-200 text-black font-extrabold px-3.5 py-2 rounded-lg text-xs flex items-center gap-1.5 transition border border-black shadow">
+                <span>+ Add Habit</span>
+            </button>
+
+            <button onclick="window.print()" class="bg-zinc-900 hover:bg-zinc-800 text-slate-200 font-bold px-3 py-2 rounded-lg text-xs border border-zinc-700 transition flex items-center gap-1">
+                <span>🖨️</span> Print
+            </button>
+
+            <button onclick="openResetModal()" class="bg-zinc-900 hover:bg-rose-950 text-slate-300 hover:text-rose-300 border border-zinc-700 font-semibold px-3 py-2 rounded-lg text-xs transition">
+                Reset
+            </button>
         </div>
     </header>
 
-    <!-- Main Sheet Container -->
-    <main class="max-w-5xl mx-auto px-2 sm:px-4">
-        <div class="print-container bg-white border-2 border-black p-4 sm:p-6 shadow-xl text-black">
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="max-w-[1750px] mx-auto space-y-5">
+
+        <!-- TOP CHARTS & STATS SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
             
-            <!-- HEADER BLOCK -->
-            <div class="text-center border-b-2 border-black pb-4 mb-4">
-                <div class="flex items-center justify-center gap-3 mb-1">
-                    <div class="h-[2px] bg-black flex-1 max-w-[120px] sm:max-w-[200px]"></div>
-                    <span class="text-xl sm:text-2xl font-bold">❄️</span>
-                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-wider font-serif uppercase">THE 90-DAY WINTER ARC</h1>
-                    <span class="text-xl sm:text-2xl font-bold">❄️</span>
-                    <div class="h-[2px] bg-black flex-1 max-w-[120px] sm:max-w-[200px]"></div>
+            <!-- DAILY PROGRESS BAR CHART (Lg: 6 cols) -->
+            <div class="lg:col-span-6 excel-panel rounded-xl p-4 sm:p-5 flex flex-col justify-between relative">
+                <div class="flex items-center justify-between mb-3 border-b-2 border-black pb-2">
+                    <h2 class="font-black text-xs sm:text-sm uppercase tracking-wider text-black flex items-center gap-2">
+                        <span class="p-1 rounded bg-black text-white">📊</span> Daily Progress
+                    </h2>
+                    <span id="viewModeBadge" class="text-[11px] font-bold bg-black text-white px-3 py-1 rounded-full">Days 1 - 90</span>
                 </div>
-                
-                <p class="text-[10px] sm:text-xs tracking-[0.2em] font-semibold uppercase text-slate-700">
-                    90 DAYS OF DISCIPLINE &nbsp;/&nbsp; BETTER HABITS &nbsp;/&nbsp; STRONGER YOU
-                </p>
-
-                <!-- 90 Day Progress Bar -->
-                <div class="mt-4 bg-slate-100 p-2 border border-black rounded text-xs no-print">
-                    <div class="flex justify-between font-bold mb-1">
-                        <span>90-DAY PROGRESS</span>
-                        <span id="progressText">0% Completed</span>
-                    </div>
-                    <div class="w-full bg-slate-200 h-3 border border-black rounded-full overflow-hidden">
-                        <div id="progressBar" class="bg-black h-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Phase Selector Buttons for easy viewing on phones -->
-                <div class="flex flex-wrap items-center justify-center gap-2 mt-4 no-print text-xs font-bold">
-                    <span class="text-slate-600">View Phase:</span>
-                    <button onclick="setPhaseFilter('all')" id="btn-all" class="px-3 py-1 border border-black rounded bg-black text-white">All 90 Days</button>
-                    <button onclick="setPhaseFilter('p1')" id="btn-p1" class="px-3 py-1 border border-black rounded bg-white hover:bg-slate-100">Days 1-30</button>
-                    <button onclick="setPhaseFilter('p2')" id="btn-p2" class="px-3 py-1 border border-black rounded bg-white hover:bg-slate-100">Days 31-60</button>
-                    <button onclick="setPhaseFilter('p3')" id="btn-p3" class="px-3 py-1 border border-black rounded bg-white hover:bg-slate-100">Days 61-90</button>
-                </div>
-
-                <!-- Name and Target Fields -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm font-bold mt-4 text-left">
-                    <div class="flex items-center gap-2">
-                        <span>Name :</span>
-                        <input type="text" id="userName" placeholder="" class="border-b-2 border-black px-2 py-0.5 w-full focus:outline-none font-medium">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span>Target Period :</span>
-                        <input type="text" id="userMonth" placeholder="Oct 1 - Dec 31 (90 Days)" class="border-b-2 border-black px-2 py-0.5 w-full focus:outline-none font-medium">
-                    </div>
+                <div class="h-48 w-full relative">
+                    <canvas id="dailyChart"></canvas>
                 </div>
             </div>
 
-            <!-- HABITS SECTION -->
-            <section class="mb-5">
-                <div class="overflow-x-auto table-scroll">
-                    <table class="w-full text-xs text-center border-collapse border-2 border-black">
-                        <thead>
-                            <tr class="border-b-2 border-black bg-slate-50" id="habitHeaderRow">
-                                <th class="p-2 text-left font-extrabold border-r-2 border-black min-w-[190px] uppercase tracking-wider text-sm flex items-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    HABITS
-                                </th>
-                                <!-- Day headers generated dynamically from 1 to 90 -->
-                            </tr>
-                        </thead>
-                        <tbody id="habitRows">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- SLEEP / MOBILITY SECTION -->
-            <section class="mb-5">
-                <div class="overflow-x-auto table-scroll">
-                    <table class="w-full text-xs text-center border-collapse border-2 border-black">
-                        <thead>
-                            <tr class="border-b-2 border-black bg-slate-50" id="sleepHeaderRow">
-                                <th class="p-2 text-left font-extrabold border-r-2 border-black min-w-[190px] uppercase tracking-wider text-sm flex items-center gap-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                                    SLEEP / MOBILITY
-                                </th>
-                                <!-- Day headers generated dynamically from 1 to 90 -->
-                            </tr>
-                        </thead>
-                        <tbody id="sleepRows">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- REFLECTION / GOALS SECTION -->
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <!-- Box 1 -->
-                <div class="border-2 border-black p-3 bg-white">
-                    <div class="flex items-center gap-2 mb-2 border-b border-black pb-1">
-                        <span class="text-base">🏆</span>
-                        <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide">MY WIN THIS MONTH</h3>
+            <!-- OVERALL GOALS SUMMARY STATS (Lg: 3 cols) -->
+            <div class="lg:col-span-3 excel-panel rounded-xl p-4 sm:p-5 flex flex-col justify-between">
+                <h2 class="font-black text-xs sm:text-sm uppercase tracking-wider text-black mb-3 border-b-2 border-black pb-2 flex items-center gap-2">
+                    <span class="p-1 rounded bg-black text-white">🎯</span> Summary
+                </h2>
+                
+                <div class="grid grid-cols-3 gap-2 my-1 text-center">
+                    <div class="bg-slate-100 p-2 rounded-lg border-2 border-black">
+                        <span class="block text-[10px] uppercase font-bold text-slate-600">Goal</span>
+                        <span id="statGoal" class="text-sm sm:text-base font-black text-black">0</span>
                     </div>
-                    <textarea id="winThisMonth" rows="5" class="w-full bg-transparent text-xs text-slate-900 focus:outline-none resize-none lined-textarea pt-1 font-medium leading-6" placeholder=""></textarea>
-                </div>
-
-                <!-- Box 2 -->
-                <div class="border-2 border-black p-3 bg-white">
-                    <div class="flex items-center gap-2 mb-2 border-b border-black pb-1">
-                        <span class="text-base">📊</span>
-                        <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide">WHAT I NEED TO IMPROVE NEXT MONTH</h3>
+                    <div class="bg-black p-2 rounded-lg text-white border-2 border-black">
+                        <span class="block text-[10px] uppercase font-bold text-slate-300">Done</span>
+                        <span id="statCompleted" class="text-sm sm:text-base font-black text-white">0</span>
                     </div>
-                    <textarea id="needToImprove" rows="5" class="w-full bg-transparent text-xs text-slate-900 focus:outline-none resize-none lined-textarea pt-1 font-medium leading-6" placeholder=""></textarea>
-                </div>
-
-                <!-- Box 3 -->
-                <div class="border-2 border-black p-3 bg-white">
-                    <div class="flex items-center gap-2 mb-2 border-b border-black pb-1">
-                        <span class="text-base">⭐</span>
-                        <h3 class="font-extrabold text-xs sm:text-sm uppercase tracking-wide">MY BIGGEST ACHIEVEMENT</h3>
+                    <div class="bg-slate-200 p-2 rounded-lg border-2 border-black">
+                        <span class="block text-[10px] uppercase font-bold text-slate-600">Left</span>
+                        <span id="statLeft" class="text-sm sm:text-base font-black text-slate-800">0</span>
                     </div>
-                    <textarea id="biggestAchievement" rows="5" class="w-full bg-transparent text-xs text-slate-900 focus:outline-none resize-none lined-textarea pt-1 font-medium leading-6" placeholder=""></textarea>
                 </div>
-            </section>
 
-            <!-- FOOTER -->
-            <div class="text-center pt-2 border-t border-black">
-                <p class="text-[10px] sm:text-xs font-bold tracking-[0.2em] uppercase text-black">
-                    — SMALL STEPS MAKE BIG CHANGES —
-                </p>
+                <div class="h-36 w-full relative flex items-center justify-center">
+                    <canvas id="donutChart"></canvas>
+                </div>
+            </div>
+
+            <!-- TOP HABITS RANKING (Lg: 3 cols) -->
+            <div class="lg:col-span-3 excel-panel rounded-xl p-4 sm:p-5 flex flex-col justify-between">
+                <div>
+                    <h2 class="font-black text-xs sm:text-sm uppercase tracking-wider text-black mb-3 border-b-2 border-black pb-2 flex items-center justify-between">
+                        <span class="flex items-center gap-2"><span class="p-1 rounded bg-black text-white">🏆</span> TOP HABITS</span>
+                        <span class="text-[10px] text-slate-600 font-bold">% Complete</span>
+                    </h2>
+                    <div id="topHabitsList" class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                        <!-- Dynamic top habits populated via JS -->
+                    </div>
+                </div>
             </div>
 
         </div>
+
+        <!-- MIDDLE SECTION: MAIN TRACKING GRID & ANALYSIS -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            <!-- MAIN HABIT GRID (Lg: 8 cols) -->
+            <div class="lg:col-span-8 excel-panel rounded-xl p-2 sm:p-4 overflow-hidden">
+                <div class="overflow-x-auto pb-2">
+                    <table class="w-full text-center border-collapse border-2 border-black text-xs font-bold rounded overflow-hidden">
+                        <thead>
+                            <!-- WEEKS HEADER -->
+                            <tr class="bg-black text-white border-b-2 border-black" id="weeksHeaderRow">
+                                <th class="p-2 text-left border-r-2 border-black min-w-[180px] bg-black text-white font-black tracking-wider uppercase">
+                                    WINTER ARC ❄
+                                </th>
+                                <!-- Dynamic Week Headers -->
+                            </tr>
+                            <!-- DAYS HEADER -->
+                            <tr class="bg-slate-800 text-white border-b-2 border-black" id="daysHeaderRow">
+                                <th class="p-2 text-left border-r-2 border-black min-w-[180px] bg-slate-900 text-white font-black text-xs uppercase tracking-wider">
+                                    HABITS
+                                </th>
+                                <!-- Dynamic Day Numbers 1..90 -->
+                            </tr>
+                        </thead>
+                        <tbody id="habitGridBody" class="divide-y divide-black bg-[#cad8e6]">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                        <tfoot id="habitGridFooter" class="border-t-2 border-black bg-slate-200 text-black font-extrabold">
+                            <!-- Sleep / Mood tracking rows -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ANALYSIS TABLE (Lg: 4 cols) -->
+            <div class="lg:col-span-4 excel-panel rounded-xl p-4 sm:p-5 flex flex-col">
+                <h2 class="font-black text-xs sm:text-sm uppercase tracking-wider text-black mb-3 border-b-2 border-black pb-2 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><span class="p-1 rounded bg-black text-white">📈</span> ANALYSIS</span>
+                    <span class="text-[10px] text-slate-600 font-bold">90-Day Overview</span>
+                </h2>
+                <div class="overflow-x-auto flex-1 max-h-[520px]">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-black text-white font-black border-b-2 border-black">
+                                <th class="p-2">Goal</th>
+                                <th class="p-2 text-center">Actual</th>
+                                <th class="p-2 text-center">Left</th>
+                                <th class="p-2 min-w-[80px]">Progress</th>
+                                <th class="p-2 text-right">%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="analysisBody" class="divide-y divide-slate-400 text-slate-900 font-bold bg-[#cad8e6]">
+                            <!-- Dynamic analysis rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM REFLECTIONS & NOTES SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 no-print">
+            <div class="excel-panel rounded-xl p-4 sm:p-5">
+                <h3 class="font-black text-xs uppercase tracking-wider text-black mb-2 flex items-center gap-2">
+                    <span>🏆</span> MY WINS THIS PHASE
+                </h3>
+                <textarea id="refWins" oninput="saveReflections()" rows="3" placeholder="Key wins, workout milestones, streak records..." 
+                          class="w-full bg-[#cad8e6] border-2 border-black rounded-lg p-3 text-xs text-black font-bold focus:outline-none focus:bg-white transition resize-none"></textarea>
+            </div>
+
+            <div class="excel-panel rounded-xl p-4 sm:p-5">
+                <h3 class="font-black text-xs uppercase tracking-wider text-black mb-2 flex items-center gap-2">
+                    <span>📈</span> WHAT I NEED TO IMPROVE
+                </h3>
+                <textarea id="refImprove" oninput="saveReflections()" rows="3" placeholder="Weak days, distractions eliminated, habits to fix..." 
+                          class="w-full bg-[#cad8e6] border-2 border-black rounded-lg p-3 text-xs text-black font-bold focus:outline-none focus:bg-white transition resize-none"></textarea>
+            </div>
+
+            <div class="excel-panel rounded-xl p-4 sm:p-5">
+                <h3 class="font-black text-xs uppercase tracking-wider text-black mb-2 flex items-center gap-2">
+                    <span>⭐</span> BIGGEST ACHIEVEMENT
+                </h3>
+                <textarea id="refAchievement" oninput="saveReflections()" rows="3" placeholder="Your main mindset & physical transformation after 90 days..." 
+                          class="w-full bg-[#cad8e6] border-2 border-black rounded-lg p-3 text-xs text-black font-bold focus:outline-none focus:bg-white transition resize-none"></textarea>
+            </div>
+        </div>
+
     </main>
+    </div>
+
+    <!-- MODAL DIALOG: ADD HABIT -->
+    <div id="addHabitModal" class="fixed inset-0 bg-black/80 modal-blur z-50 hidden flex items-center justify-center p-4">
+        <div class="excel-panel bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-base font-black text-black mb-4 flex items-center gap-2 border-b-2 border-black pb-2">
+                <span class="text-xl">✨</span> Add New Winter Arc Habit
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-black text-black mb-1">HABIT NAME</label>
+                    <input type="text" id="newHabitNameInput" placeholder="e.g., Read 20 pages or Cold Shower" class="w-full bg-[#cad8e6] border-2 border-black rounded-lg p-3 text-xs text-black font-bold focus:outline-none focus:bg-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-black mb-1">EMOJI / ICON</label>
+                    <input type="text" id="newHabitIconInput" value="🎯" maxlength="4" class="w-full bg-[#cad8e6] border-2 border-black rounded-lg p-3 text-xs text-black font-bold focus:outline-none focus:bg-white">
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button onclick="closeAddHabitModal()" class="px-4 py-2 rounded-lg text-xs font-bold text-black border border-black hover:bg-slate-200">Cancel</button>
+                <button onclick="confirmAddHabit()" class="bg-black text-white px-4 py-2 rounded-lg text-xs font-black hover:bg-slate-800">Add Habit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DIALOG: CONFIRM RESET -->
+    <div id="resetModal" class="fixed inset-0 bg-black/80 modal-blur z-50 hidden flex items-center justify-center p-4">
+        <div class="excel-panel bg-white rounded-xl p-6 w-full max-w-md">
+            <h3 class="text-base font-black text-rose-600 mb-2 flex items-center gap-2 border-b-2 border-black pb-2">
+                <span>⚠️</span> Reset All Progress?
+            </h3>
+            <p class="text-xs text-black font-bold mb-6">This will clear all habit checkmarks, sleep logs, and notes for the full 90-day challenge. This action cannot be undone.</p>
+            <div class="flex items-center justify-end gap-3">
+                <button onclick="closeResetModal()" class="px-4 py-2 rounded-lg text-xs font-bold text-black border border-black hover:bg-slate-200">Cancel</button>
+                <button onclick="confirmResetAll()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-black border border-black">Reset Data</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-        const habitList = [
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`, name: "Wake up early" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`, name: "Study" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>`, name: "No/limited phone" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`, name: "Exercise" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>`, name: "Read/English" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>`, name: "Drink enough water" },
-            { icon: `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`, name: "Sleep on time" }
+        // Default 90-Day Winter Arc Habits
+        const defaultHabits = [
+            { id: 'h1', name: 'Wake up at 05:00', icon: '⏰' },
+            { id: 'h2', name: 'Gym / Workout', icon: '💪' },
+            { id: 'h3', name: 'Reading / Learning', icon: '📖' },
+            { id: 'h4', name: 'Day Planning', icon: '📅' },
+            { id: 'h5', name: 'No Junk / Detox', icon: '🚫' },
+            { id: 'h6', name: 'Project / Deep Work', icon: '🎯' },
+            { id: 'h7', name: 'No Alcohol', icon: '🥤' },
+            { id: 'h8', name: 'Social Media Detox', icon: '🌿' },
+            { id: 'h9', name: 'Goal Journaling', icon: '📝' },
+            { id: 'h10', name: 'Cold Shower', icon: '🚀' },
+            { id: 'h11', name: '10k Steps', icon: '🚶' },
+            { id: 'h12', name: 'Plan Tomorrow', icon: '📋' }
         ];
 
-        const sleepHours = ["10 hrs", "9 hrs", "8 hrs", "7 hrs", "6 hrs", "<6 hrs"];
+        let habits = [];
+        let checksData = {}; 
+        let extraData = {};  
+        let currentViewMode = "90days"; 
 
-        let currentPhase = 'all';
+        let dailyChartInstance = null;
+        let donutChartInstance = null;
 
-        let trackerData = {
-            name: '',
-            month: 'Oct 1 - Dec 31 (90 Days)',
-            habits: {},
-            habitNames: habitList.map(h => h.name),
-            sleep: {},
-            winThisMonth: '',
-            needToImprove: '',
-            biggestAchievement: ''
-        };
-
-        function setPhaseFilter(phase) {
-            currentPhase = phase;
-            ['all', 'p1', 'p2', 'p3'].forEach(p => {
-                const btn = document.getElementById(`btn-${p}`);
-                if (btn) {
-                    btn.className = (p === phase) 
-                        ? "px-3 py-1 border border-black rounded bg-black text-white" 
-                        : "px-3 py-1 border border-black rounded bg-white hover:bg-slate-100";
-                }
-            });
-            renderUI();
+        function initApp() {
+            loadStorage();
+            renderCalendar();
+            renderCharts();
+            updateAll();
         }
 
-        function getDayRange() {
-            if (currentPhase === 'p1') return { start: 1, end: 30 };
-            if (currentPhase === 'p2') return { start: 31, end: 60 };
-            if (currentPhase === 'p3') return { start: 61, end: 90 };
-            return { start: 1, end: 90 };
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem('winter_arc_tracker_90days');
-            if (saved) {
-                try {
-                    trackerData = Object.assign(trackerData, JSON.parse(saved));
-                } catch(e) {
-                    console.error("Error loading saved data", e);
-                }
+        function loadStorage() {
+            const savedHabits = localStorage.getItem('winter_arc_habits');
+            if (savedHabits) {
+                try { habits = JSON.parse(savedHabits); } catch(e) { habits = defaultHabits; }
+            } else {
+                habits = defaultHabits;
             }
-            renderUI();
-        }
 
-        function saveData() {
-            trackerData.name = document.getElementById('userName').value;
-            trackerData.month = document.getElementById('userMonth').value;
-            trackerData.winThisMonth = document.getElementById('winThisMonth').value;
-            trackerData.needToImprove = document.getElementById('needToImprove').value;
-            trackerData.biggestAchievement = document.getElementById('biggestAchievement').value;
-
-            localStorage.setItem('winter_arc_tracker_90days', JSON.stringify(trackerData));
-            updateProgress();
-        }
-
-        function updateProgress() {
-            let habitCheckedCount = 0;
-            const totalHabitSlots = habitList.length * 90;
-            for (let h = 0; h < habitList.length; h++) {
-                for (let d = 1; d <= 90; d++) {
-                    if (trackerData.habits[`${h}-${d}`]) {
-                        habitCheckedCount++;
-                    }
-                }
+            const savedChecks = localStorage.getItem('winter_arc_checks');
+            if (savedChecks) {
+                try { checksData = JSON.parse(savedChecks); } catch(e) { checksData = {}; }
             }
-            const pct = Math.round((habitCheckedCount / totalHabitSlots) * 100);
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            if (progressBar && progressText) {
-                progressBar.style.width = `${pct}%`;
-                progressText.innerText = `${pct}% Completed (${habitCheckedCount}/${totalHabitSlots})`;
+
+            const savedExtra = localStorage.getItem('winter_arc_extra');
+            if (savedExtra) {
+                try { extraData = JSON.parse(savedExtra); } catch(e) { extraData = {}; }
             }
+
+            document.getElementById('refWins').value = localStorage.getItem('winter_arc_ref_wins') || '';
+            document.getElementById('refImprove').value = localStorage.getItem('winter_arc_ref_improve') || '';
+            document.getElementById('refAchievement').value = localStorage.getItem('winter_arc_ref_achievement') || '';
         }
 
-        function renderUI() {
-            const { start, end } = getDayRange();
+        function saveStorage() {
+            localStorage.setItem('winter_arc_habits', JSON.stringify(habits));
+            localStorage.setItem('winter_arc_checks', JSON.stringify(checksData));
+            localStorage.setItem('winter_arc_extra', JSON.stringify(extraData));
+        }
 
-            // Render Table Headers
-            const habitHeader = document.getElementById('habitHeaderRow');
-            const sleepHeader = document.getElementById('sleepHeaderRow');
+        function saveReflections() {
+            localStorage.setItem('winter_arc_ref_wins', document.getElementById('refWins').value);
+            localStorage.setItem('winter_arc_ref_improve', document.getElementById('refImprove').value);
+            localStorage.setItem('winter_arc_ref_achievement', document.getElementById('refAchievement').value);
+        }
 
-            let headerHTML = `<th class="p-2 text-left font-extrabold border-r-2 border-black min-w-[190px] uppercase tracking-wider text-sm flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                HABITS
-            </th>`;
-            
-            let sleepHeaderHTML = `<th class="p-2 text-left font-extrabold border-r-2 border-black min-w-[190px] uppercase tracking-wider text-sm flex items-center gap-1.5">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                SLEEP / MOBILITY
-            </th>`;
+        function changeViewMode() {
+            currentViewMode = document.getElementById('viewModeSelect').value;
+            renderCalendar();
+            updateAll();
+        }
+
+        function getStartAndEndDays() {
+            if (currentViewMode === 'p1') return { start: 1, end: 30, label: 'Phase 1 (Days 1 - 30)' };
+            if (currentViewMode === 'p2') return { start: 31, end: 60, label: 'Phase 2 (Days 31 - 60)' };
+            if (currentViewMode === 'p3') return { start: 61, end: 90, label: 'Phase 3 (Days 61 - 90)' };
+            return { start: 1, end: 90, label: 'Full 90 Days Challenge' };
+        }
+
+        function renderCalendar() {
+            const { start, end, label } = getStartAndEndDays();
+            document.getElementById('viewModeBadge').innerText = label;
+
+            // 1. Build Weeks Header & Days Header
+            const weeksRow = document.getElementById('weeksHeaderRow');
+            const daysRow = document.getElementById('daysHeaderRow');
+
+            let weeksHTML = `<th class="p-2 text-left border-r-2 border-black min-w-[180px] bg-black text-white font-black tracking-wider">WINTER ARC ❄</th>`;
+            let daysHTML = `<th class="p-2 text-left border-r-2 border-black min-w-[180px] bg-slate-900 text-white font-black text-xs uppercase tracking-wider">HABITS</th>`;
+
+            let currentWeekNum = Math.ceil(start / 7);
+            let weekSpan = 0;
 
             for (let day = start; day <= end; day++) {
-                const borderStyle = (day === 30 || day === 60) ? 'border-r-2 border-black bg-slate-200' : 'border-r border-black';
-                headerHTML += `<th class="p-1 min-w-[22px] sm:min-w-[25px] ${borderStyle} font-bold text-[11px]">${day}</th>`;
-                sleepHeaderHTML += `<th class="p-1 min-w-[22px] sm:min-w-[25px] ${borderStyle} font-bold text-[11px]">${day}</th>`;
+                weekSpan++;
+                if (day % 7 === 0 || day === end) {
+                    weeksHTML += `<th colspan="${weekSpan}" class="border-r-2 border-black p-1 text-[10px] sm:text-[11px] uppercase tracking-wider bg-black text-white font-black">Week ${currentWeekNum}</th>`;
+                    currentWeekNum++;
+                    weekSpan = 0;
+                }
+
+                daysHTML += `
+                    <th class="border-r border-black min-w-[26px] sm:min-w-[28px] p-0.5 font-black bg-slate-800 text-white text-center">
+                        <div class="text-[7px] text-slate-300 uppercase font-bold">D</div>
+                        <div class="text-[11px] font-black">${day}</div>
+                    </th>
+                `;
             }
 
-            habitHeader.innerHTML = headerHTML;
-            sleepHeader.innerHTML = sleepHeaderHTML;
+            weeksRow.innerHTML = weeksHTML;
+            daysRow.innerHTML = daysHTML;
 
-            // Text inputs
-            document.getElementById('userName').value = trackerData.name || '';
-            document.getElementById('userMonth').value = trackerData.month || 'Oct 1 - Dec 31 (90 Days)';
-            document.getElementById('winThisMonth').value = trackerData.winThisMonth || '';
-            document.getElementById('needToImprove').value = trackerData.needToImprove || '';
-            document.getElementById('biggestAchievement').value = trackerData.biggestAchievement || '';
+            // 2. Build Grid Body Rows
+            const tbody = document.getElementById('habitGridBody');
+            tbody.innerHTML = '';
 
-            // Render Habits
-            const habitContainer = document.getElementById('habitRows');
-            habitContainer.innerHTML = '';
-
-            habitList.forEach((habitObj, hIdx) => {
+            habits.forEach((habit) => {
                 const tr = document.createElement('tr');
-                tr.className = "border-b border-black hover:bg-slate-50 transition";
-                const habitName = trackerData.habitNames[hIdx] || habitObj.name;
+                tr.className = "hover:bg-slate-300/80 transition border-b border-black/60";
 
-                let html = `
-                    <td class="p-1.5 text-left border-r-2 border-black font-semibold text-xs flex items-center gap-2">
-                        <span class="text-black min-w-fit">${habitObj.icon}</span>
-                        <input type="text" value="${escapeHtml(habitName)}" 
-                            onchange="updateHabitName(${hIdx}, this.value)"
-                            class="bg-transparent w-full focus:outline-none focus:font-bold text-xs">
+                let rowHTML = `
+                    <td class="p-2 text-left border-r-2 border-black font-black bg-black text-white flex items-center justify-between group text-xs">
+                        <div class="flex items-center gap-1.5 overflow-hidden pr-1">
+                            <span>${habit.icon || '📌'}</span>
+                            <span class="truncate">${habit.name}</span>
+                        </div>
+                        <button onclick="removeHabit('${habit.id}')" title="Delete Habit" class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-400 text-xs px-1 font-bold transition no-print">×</button>
                     </td>
                 `;
 
                 for (let day = start; day <= end; day++) {
-                    const key = `${hIdx}-${day}`;
-                    const isChecked = !!trackerData.habits[key];
-                    const borderStyle = (day === 30 || day === 60) ? 'border-r-2 border-black' : 'border-r border-black';
-                    html += `
-                        <td class="p-0 ${borderStyle} text-center cursor-pointer select-none transition h-7 w-6 ${isChecked ? 'bg-black text-white font-bold checked-cell' : 'hover:bg-slate-100'}"
-                            onclick="toggleHabit('${key}')">
-                            ${isChecked ? '✓' : ''}
+                    const key = `${habit.id}-day${day}`;
+                    const checked = !!checksData[key];
+
+                    rowHTML += `
+                        <td class="border-r border-black/40 text-center p-0 align-middle h-7 w-7 ${checked ? 'cell-checked' : 'hover:bg-slate-300'}" 
+                            onclick="toggleCheck('${key}')" style="cursor: pointer;">
+                            <input type="checkbox" ${checked ? 'checked' : ''} class="checkbox-custom pointer-events-none" onclick="event.stopPropagation()">
                         </td>
                     `;
                 }
 
-                tr.innerHTML = html;
-                habitContainer.appendChild(tr);
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
             });
 
-            // Render Sleep / Mobility
-            const sleepContainer = document.getElementById('sleepRows');
-            sleepContainer.innerHTML = '';
-
-            sleepHours.forEach((hourLabel, sIdx) => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b border-black hover:bg-slate-50 transition";
-
-                let html = `
-                    <td class="p-1.5 text-left border-r-2 border-black font-semibold text-xs flex items-center gap-2">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 00-1-1v-4a1 1 0 011-1h2a1 1 0 001 1m-6 0h6"></path></svg>
-                        <span>${hourLabel}</span>
-                    </td>
-                `;
-
-                for (let day = start; day <= end; day++) {
-                    const key = `${sIdx}-${day}`;
-                    const isChecked = !!trackerData.sleep[key];
-                    const borderStyle = (day === 30 || day === 60) ? 'border-r-2 border-black' : 'border-r border-black';
-                    html += `
-                        <td class="p-0 ${borderStyle} text-center cursor-pointer select-none transition h-7 w-6 ${isChecked ? 'bg-black text-white font-bold checked-cell' : 'hover:bg-slate-100'}"
-                            onclick="toggleSleep('${key}')">
-                            ${isChecked ? '■' : ''}
-                        </td>
-                    `;
-                }
-
-                tr.innerHTML = html;
-                sleepContainer.appendChild(tr);
-            });
-
-            updateProgress();
-        }
-
-        function toggleHabit(key) {
-            trackerData.habits[key] = !trackerData.habits[key];
-            saveData();
-            renderUI();
-        }
-
-        function toggleSleep(key) {
-            trackerData.sleep[key] = !trackerData.sleep[key];
-            saveData();
-            renderUI();
-        }
-
-        function updateHabitName(index, newName) {
-            trackerData.habitNames[index] = newName;
-            saveData();
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/"/g, '&quot;');
-        }
-
-        function resetData() {
-            if (confirm("Are you sure you want to reset all 90 days data on this tracker?")) {
-                localStorage.removeItem('winter_arc_tracker_90days');
-                trackerData = {
-                    name: '',
-                    month: 'Oct 1 - Dec 31 (90 Days)',
-                    habits: {},
-                    habitNames: habitList.map(h => h.name),
-                    sleep: {},
-                    winThisMonth: '',
-                    needToImprove: '',
-                    biggestAchievement: ''
-                };
-                renderUI();
+            // 3. Sleep / Mood Footer rows
+            const tfoot = document.getElementById('habitGridFooter');
+            
+            let sleepHTML = `<tr class="border-b border-black">
+                <td class="p-2 text-left font-black bg-slate-900 text-white border-r-2 border-black text-xs">🌙 Sleep (hrs)</td>`;
+            for (let day = start; day <= end; day++) {
+                const val = extraData[`sleep-day${day}`] || '';
+                sleepHTML += `<td class="border-r border-black/40 text-[10px] p-0 text-center font-bold bg-[#b5c7d9]">
+                    <input type="text" value="${val}" onchange="setExtraData('sleep-day${day}', this.value)" class="w-full text-center bg-transparent focus:bg-white text-black font-black focus:outline-none" maxlength="3">
+                </td>`;
             }
+            sleepHTML += `</tr>`;
+
+            let moodHTML = `<tr class="border-b border-black">
+                <td class="p-2 text-left font-black bg-slate-900 text-white border-r-2 border-black text-xs">⚡ Mood / Energy</td>`;
+            for (let day = start; day <= end; day++) {
+                const val = extraData[`mood-day${day}`] || '';
+                moodHTML += `<td class="border-r border-black/40 text-[10px] p-0 text-center font-bold bg-[#b5c7d9]">
+                    <input type="text" value="${val}" onchange="setExtraData('mood-day${day}', this.value)" class="w-full text-center bg-transparent focus:bg-white text-black font-black focus:outline-none" maxlength="3">
+                </td>`;
+            }
+            moodHTML += `</tr>`;
+
+            tfoot.innerHTML = sleepHTML + moodHTML;
         }
 
-        // Attach event listeners
-        document.getElementById('userName').addEventListener('input', saveData);
-        document.getElementById('userMonth').addEventListener('input', saveData);
-        document.getElementById('winThisMonth').addEventListener('input', saveData);
-        document.getElementById('needToImprove').addEventListener('input', saveData);
-        document.getElementById('biggestAchievement').addEventListener('input', saveData);
+        function toggleCheck(key) {
+            checksData[key] = !checksData[key];
+            saveStorage();
+            renderCalendar();
+            updateAll();
+        }
 
-        window.onload = function() {
-            loadData();
-        };
+        function setExtraData(key, val) {
+            extraData[key] = val;
+            saveStorage();
+        }
+
+        function updateAll() {
+            const { start, end } = getStartAndEndDays();
+            const daysCount = (end - start) + 1;
+            const totalHabits = habits.length;
+            const totalPossibleChecks = daysCount * totalHabits;
+
+            let totalCheckedCount = 0;
+            const dailyCheckedCounts = new Array(daysCount).fill(0);
+            const habitStats = {}; 
+
+            habits.forEach(h => habitStats[h.id] = 0);
+
+            let idx = 0;
+            for (let day = start; day <= end; day++) {
+                habits.forEach(habit => {
+                    const key = `${habit.id}-day${day}`;
+                    if (checksData[key]) {
+                        totalCheckedCount++;
+                        dailyCheckedCounts[idx]++;
+                        habitStats[habit.id]++;
+                    }
+                });
+                idx++;
+            }
+
+            document.getElementById('statGoal').innerText = totalPossibleChecks;
+            document.getElementById('statCompleted').innerText = totalCheckedCount;
+            document.getElementById('statLeft').innerText = Math.max(0, totalPossibleChecks - totalCheckedCount);
+
+            // Update Analysis Table
+            const analysisBody = document.getElementById('analysisBody');
+            analysisBody.innerHTML = '';
+
+            const sortedHabits = [...habits].map(h => {
+                const act = habitStats[h.id] || 0;
+                const pct = daysCount > 0 ? Math.round((act / daysCount) * 100) : 0;
+                return { ...h, act, left: daysCount - act, pct };
+            });
+
+            sortedHabits.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-300 transition border-b border-black/40";
+
+                tr.innerHTML = `
+                    <td class="p-2 font-black truncate max-w-[120px] text-black" title="${item.name}">${item.icon || ''} ${item.name}</td>
+                    <td class="p-2 text-center font-black text-black">${item.act}</td>
+                    <td class="p-2 text-center text-slate-700 font-bold">${item.left}</td>
+                    <td class="p-2">
+                        <div class="w-full bg-slate-300 rounded-full h-2.5 overflow-hidden border border-black">
+                            <div class="bg-black h-full" style="width: ${item.pct}%"></div>
+                        </div>
+                    </td>
+                    <td class="p-2 text-right font-black text-black">${item.pct}%</td>
+                `;
+                analysisBody.appendChild(tr);
+            });
+
+            // Update Top Habits Ranking
+            const topHabitsList = document.getElementById('topHabitsList');
+            topHabitsList.innerHTML = '';
+            const topRanked = [...sortedHabits].sort((a,b) => b.pct - a.pct).slice(0, 7);
+
+            topRanked.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between text-xs bg-[#cad8e6] p-2 rounded-lg border-2 border-black font-bold";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2 overflow-hidden">
+                        <span class="font-black text-black min-w-[14px]">${index + 1}.</span>
+                        <span class="truncate text-black">${item.icon || ''} ${item.name}</span>
+                    </div>
+                    <span class="font-black text-xs text-white bg-black px-2 py-0.5 rounded border border-black">${item.pct}%</span>
+                `;
+                topHabitsList.appendChild(div);
+            });
+
+            updateDailyChart(dailyCheckedCounts, totalHabits, start, end);
+            updateDonutChart(totalCheckedCount, totalPossibleChecks);
+        }
+
+        function renderCharts() {
+            const ctxDaily = document.getElementById('dailyChart').getContext('2d');
+            dailyChartInstance = new Chart(ctxDaily, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Completion %',
+                        data: [],
+                        backgroundColor: '#000000',
+                        borderRadius: 2,
+                        hoverBackgroundColor: '#334155'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#000000', font: { size: 9, weight: 'bold' } }
+                        },
+                        y: {
+                            min: 0,
+                            max: 100,
+                            grid: { color: 'rgba(0, 0, 0, 0.15)' },
+                            ticks: { color: '#000000', font: { size: 9, weight: 'bold' }, callback: v => v + '%' }
+                        }
+                    }
+                }
+            });
+
+            const ctxDonut = document.getElementById('donutChart').getContext('2d');
+            donutChartInstance = new Chart(ctxDonut, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Completed', 'Remaining'],
+                    datasets: [{
+                        data: [0, 100],
+                        backgroundColor: ['#000000', '#cbd5e1'],
+                        borderColor: '#000000',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateDailyChart(counts, totalHabits, start, end) {
+            if (!dailyChartInstance) return;
+
+            const labels = [];
+            const percentages = [];
+
+            let idx = 0;
+            for (let day = start; day <= end; day++) {
+                labels.push(`D${day}`);
+                const pct = totalHabits > 0 ? Math.round((counts[idx] / totalHabits) * 100) : 0;
+                percentages.push(pct);
+                idx++;
+            }
+
+            dailyChartInstance.data.labels = labels;
+            dailyChartInstance.data.datasets[0].data = percentages;
+            dailyChartInstance.update();
+        }
+
+        function updateDonutChart(completed, goal) {
+            if (!donutChartInstance) return;
+
+            const left = Math.max(0, goal - completed);
+            donutChartInstance.data.datasets[0].data = [completed, left];
+            donutChartInstance.update();
+        }
+
+        // Modal Controls
+        function openAddHabitModal() {
+            document.getElementById('addHabitModal').classList.remove('hidden');
+        }
+
+        function closeAddHabitModal() {
+            document.getElementById('addHabitModal').classList.add('hidden');
+            document.getElementById('newHabitNameInput').value = '';
+        }
+
+        function confirmAddHabit() {
+            const name = document.getElementById('newHabitNameInput').value.trim();
+            const icon = document.getElementById('newHabitIconInput').value.trim() || '🎯';
+
+            if (!name) return;
+
+            const newHabit = {
+                id: 'h_' + Date.now(),
+                name: name,
+                icon: icon
+            };
+
+            habits.push(newHabit);
+            saveStorage();
+            renderCalendar();
+            updateAll();
+            closeAddHabitModal();
+        }
+
+        function removeHabit(id) {
+            habits = habits.filter(h => h.id !== id);
+            saveStorage();
+            renderCalendar();
+            updateAll();
+        }
+
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function confirmResetAll() {
+            checksData = {};
+            extraData = {};
+            saveStorage();
+            renderCalendar();
+            updateAll();
+            closeResetModal();
+        }
+
+        window.onload = initApp;
     </script>
 </body>
 </html>
